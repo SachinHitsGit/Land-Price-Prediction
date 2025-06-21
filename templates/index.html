@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Predict Land Price</title>
+</head>
+<body>
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <div class="container">
+        <h1>Land Price Predictor</h1>
+        <p class="welcome-text">Get accurate land price predictions using Machine Learning!</p>
+        
+        <form action="{{ url_for('predict') }}" method="post">
+            <div class="form-group">
+                <label for="area">Area (in sq ft):</label>
+                <input type="number" id="area" name="area" required 
+                       placeholder="e.g., 2000" min="100" max="50000" step="any"
+                       value="{{ request.form.area if request.form.area }}">
+            </div>
+
+            <div class="form-group">
+                <label for="road_width">Road Width (in ft):</label>
+                <input type="number" id="road_width" name="road_width" required 
+                       placeholder="e.g., 20" min="5" max="100" step="any"
+                       value="{{ request.form.road_width if request.form.road_width }}">
+            </div>
+
+            <div class="form-group">
+                <label for="distance">Distance to Landmark (in km):</label>
+                <input type="number" id="distance" name="distance" required 
+                       placeholder="e.g., 5.5" min="0.1" max="50" step="0.1"
+                       value="{{ request.form.distance if request.form.distance }}">
+            </div>
+
+            <div class="form-group">
+                <label for="location">Location Type:</label>
+                <select id="location" name="location" required>
+                    <option value="">Select a location type</option>
+                    <option value="Downtown" {{ 'selected' if request.form.location == 'Downtown' }}>Downtown</option>
+                    <option value="Urban" {{ 'selected' if request.form.location == 'Urban' }}>Urban</option>
+                    <option value="Suburb" {{ 'selected' if request.form.location == 'Suburb' }}>Suburb</option>
+                    <option value="Rural" {{ 'selected' if request.form.location == 'Rural' }}>Rural</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">Predict Price</button>
+        </form>
+
+        <div id="result">
+            {% if prediction %}
+                <div class="prediction-result">
+                    <h2>💰 Predicted Price per SqFt: ${{ "%.2f"|format(prediction) }}</h2>
+                    {% if total_value %}
+                        <div class="total-value">
+                            <p>📊 Total Land Value: ${{ "{:,.2f}".format(total_value) }}</p>
+                        </div>
+                    {% endif %}
+                    <div class="prediction-details">
+                        <p>🏠 Area: {{ area }} sq ft</p>
+                        <p>📍 Location: {{ request.form.location }}</p>
+                        <p>🛣️ Road Width: {{ request.form.road_width }} ft</p>
+                        <p>📏 Distance to Landmark: {{ request.form.distance }} km</p>
+                    </div>
+                </div>
+            {% elif error %}
+                <div class="error-result">
+                    <h2>⚠️ {{ error }}</h2>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Add interactive enhancements
+        const inputs = document.querySelectorAll('input, select');
+        
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.querySelector('label').style.color = '#667eea';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.querySelector('label').style.color = '#333';
+            });
+        });
+
+        // Form submission feedback
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.innerHTML = '🔄 Calculating...';
+            submitBtn.style.background = '#999';
+            submitBtn.disabled = true;
+        });
+
+        // Add input validation feedback
+        inputs.forEach(input => {
+            if (input.type === 'number') {
+                input.addEventListener('input', function() {
+                    const value = parseFloat(this.value);
+                    const min = parseFloat(this.min);
+                    const max = parseFloat(this.max);
+                    
+                    if (value < min || value > max) {
+                        this.style.borderColor = '#ff6b6b';
+                    } else {
+                        this.style.borderColor = '#51cf66';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
